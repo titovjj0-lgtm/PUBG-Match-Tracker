@@ -37,3 +37,50 @@ python cli.py
 Дані зберігаються у текстовому файлі matches.txt у форматі JSON.
 Тривалість матчу вимірюється у хвилинах.
 Результат матчу: win або loss.
+## Лабораторна робота №7
+
+Вебсервіс PUBG Match Tracker на Flask.
+
+## Встановлення залежностей
+
+pip install -r requirements.txt
+
+## Запуск вебсервісу
+
+python app.py
+
+Адреса сервера: http://127.0.0.1:5000
+
+## HTTP API
+
+| Метод | Маршрут | Призначення |
+|---|---|---|
+| GET | /matches | Перегляд усіх матчів |
+| GET | /matches?result=win | Пошук перемог |
+| POST | /matches | Додавання матчу |
+| DELETE | /matches/2 | Видалення матчу |
+| GET | /report | Статистичний звіт |
+
+## База даних
+
+SQLite, файл matches.db.
+
+Поля: id, date, result, kills, duration, note.
+
+Починаючи з лабораторної №7, дані зберігаються
+у SQLite замість текстового файлу.
+
+## Перевірка
+
+curl http://127.0.0.1:5000/matches
+
+curl "http://127.0.0.1:5000/matches?result=win"
+
+curl http://127.0.0.1:5000/report
+
+curl -X POST http://127.0.0.1:5000/matches -H "Content-Type: application/json" -d '{"date":"2026-11-26","result":"win","kills":5,"duration":20}'
+
+curl -X DELETE http://127.0.0.1:5000/matches/2
+
+Некоректний запит повертає HTTP 400.
+Відсутній запис повертає HTTP 404.

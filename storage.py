@@ -1,23 +1,61 @@
-import json
+import sqlite3
 from pathlib import Path
+from contextlib import closing
 
-FILE_NAME = Path(__file__).with_name("matches.txt")
+DB = Path(__file__).with_name("matches.db")
+
+
+def connect():
+    conn = sqlite3.connect(DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init():
+    with closing(connect()) as conn, conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS matches (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                result TEXT NOT NULL,
+                kills INTEGER NOT NULL,
+                duration REAL NOT NULL,
+                note TEXT
+            )
+        """)
 
 
 def load_records():
-    try:
-        with open(FILE_NAME, "r", encoding="utf-8") as file:
-            records = json.load(file)
-            if not isinstance(records, list):
-                raise ValueError("Invalid data format")
-            return records
-    except FileNotFoundError:
-        return []
-    except (OSError, ValueError) as error:
-        raise ValueError("Помилка читання файлу") from error
+    init()
+    with closing(connect()) as conn:
+        rows = conn.execute(
+            "SELECT * FROM matches ORDER BY id"
+        ).fetchall()
+        return [dict(row) for row in rows]
 
 
-def save_records(records):
-    with open(FILE_NAME, "w", encoding="utf-8") as file:
-        json.dump(records, file, ensure_ascii=False, indent=4)
+def add_match(record):
+    init()
+    with closing(connect()) as conn, conn:
+        cursor = conn.execute("""
+            INSERT INTO matches
+            (date, result, kills, duration, note)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            record["date"],
+            record["result"],
+            record["kills"],
+            record["duration"],
+            record["note"]
+        ))
+        return cursor.lastrowid
 
+
+def delete_match(match_id):
+    init()
+    with closing(connect()) as conn, conn:
+        cursor = conn.execute(
+            "DELETE FROM matches WHERE id = ?",
+            (match_id,)
+        )
+        return cursor.rowcount > 0

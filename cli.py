@@ -1,5 +1,5 @@
 import argparse
-from storage import load_records, save_records
+from storage import load_records, add_match
 from logic import add_record, find_records, report
 
 
@@ -27,10 +27,12 @@ def main():
         records = load_records()
 
         if args.command == "add":
-            add_record(records, args.date, args.result,
-                       args.kills, args.duration, args.note)
-            save_records(records)
-            print("Матч успішно додано!")
+            record = add_record(
+                [], args.date, args.result,
+                args.kills, args.duration, args.note
+            )
+            match_id = add_match(record)
+            print(f"Матч додано! ID: {match_id}")
 
         elif args.command == "list":
             for record in records:
