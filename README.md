@@ -24,3 +24,16 @@ Python, Git, GitHub.
 
 ## Запуск програми
 python cli.py
+## Приклади команд
+
+- python cli.py add 2026-11-26 win 5 20 "First match"
+- python cli.py list
+- python cli.py find win
+- python cli.py report
+- python tests.py
+
+## Формат даних
+
+Дані зберігаються у текстовому файлі matches.txt у форматі JSON.
+Тривалість матчу вимірюється у хвилинах.
+Результат матчу: win або loss.
