@@ -23,4 +23,4 @@
 Python, Git, GitHub.
 
 ## Запуск програми
-python cli.pyыы=
+python cli.py
