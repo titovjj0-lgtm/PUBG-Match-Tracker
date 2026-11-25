@@ -1,9 +1,0 @@
-[
-    {
-        "date": "2026-11-26",
-        "result": "win",
-        "kills": 5,
-        "duration": 20.0,
-        "note": "First match"
-    }
-]
