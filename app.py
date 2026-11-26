@@ -1,3 +1,4 @@
+import sqlite3
 import os
 from dotenv import load_dotenv
 
@@ -73,5 +74,19 @@ def delete_match(match_id):
 def export_matches():
     require_admin()
     return jsonify(storage.load_records())
+@app.get("/report")
+def report():
+    with sqlite3.connect("matches.db") as conn:
+        rows = conn.execute("""
+            SELECT r.name, COUNT(m.id)
+            FROM results r
+            LEFT JOIN matches m ON m.result_id = r.id
+            GROUP BY r.id
+        """).fetchall()
+
+    return jsonify([
+        {"result": name, "count": count}
+        for name, count in rows
+    ])
 if __name__ == "__main__":
     app.run(debug=True)
