@@ -162,5 +162,18 @@ def import_matches():
     return jsonify({"imported": len(records)}), 201
 
 
+
+@app.get("/health")
+def health():
+    try:
+        conn = storage.connect()
+        try:
+            conn.execute("SELECT 1").fetchone()
+        finally:
+            conn.close()
+        return jsonify({"status": "ok"})
+    except Exception:
+        return jsonify({"status": "db_error"}), 503
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -108,3 +108,43 @@ API доступний за маршрутом /matches.
 
 Після завершення роботи сервер і тунель
 необхідно зупинити через Ctrl+C.
+
+## Запуск сервера
+
+### Docker
+
+docker compose up -d --build
+
+docker compose logs -f
+
+docker compose down
+
+База даних зберігається у директорії data.
+Змінні середовища зберігаються у файлі .env.
+
+### Cloudflare Tunnel
+
+Постійний тунель забезпечує HTTPS-доступ до API.
+
+- Frontend: https://pubgmatchtracker.pp.ua
+- API: https://api.pubgmatchtracker.pp.ua
+- Health: https://api.pubgmatchtracker.pp.ua/health
+
+### CI/CD
+
+GitHub Actions автоматично запускає pytest
+та збирає Docker-образ після push у master.
+
+Self-hosted runner передбачений для автоматичного
+розгортання, але поки не налаштований.
+
+### Моніторинг
+
+UptimeRobot перевіряє /health кожні 5 хвилин.
+
+### Поточний стан
+
+Docker Desktop встановлено, але запуск заблоковано
+через проблему Virtual Machine Platform.
+Сервер тимчасово працює через Waitress.
+
