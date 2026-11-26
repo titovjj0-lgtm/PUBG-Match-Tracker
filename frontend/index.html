@@ -1,201 +1,235 @@
-﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PUBG Match Tracker</title>
-    <style>
-        body {
-            background: #141414;
-            color: white;
-            font-family: Arial, sans-serif;
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-
-        h1 {
-            color: #f5a623;
-            text-align: center;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #aaa;
-        }
-
-        form {
-            background: #242424;
-            padding: 20px;
-            border-radius: 12px;
-            display: grid;
-            gap: 12px;
-        }
-
-        input, select {
-            padding: 12px;
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-            border-radius: 6px;
-        }
-
-        button {
-            background: #f5a623;
-            color: black;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #444;
-            text-align: center;
-        }
-
-        th {
-            background: #242424;
-            color: #f5a623;
-        }
-
-        #status {
-            color: #f5a623;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PUBG Match Tracker</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    background: #101114;
+    color: #eee;
+    font-family: Arial, sans-serif;
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+}
+h1 { color: #f4b942; }
+.panel {
+    background: #1d2025;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+input, select, button {
+    padding: 12px;
+    margin: 5px;
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+input, select {
+    background: #111;
+    color: white;
+    max-width: 100%;
+}
+button {
+    background: #f4b942;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+td, th {
+    padding: 12px;
+    border-bottom: 1px solid #444;
+    text-align: left;
+}
+th { color: #f4b942; }
+#status { color: #f4b942; }
+.table-wrap { overflow-x: auto; }
+</style>
 </head>
 <body>
 
-    <h1>PUBG MATCH TRACKER</h1>
-    <p class="subtitle">Система обліку ігрової статистики</p>
+<h1>PUBG MATCH TRACKER</h1>
+<p id="status"></p>
 
-    <h2>Додати матч</h2>
+<section id="authPanel" class="panel">
+    <h2>Вхід / Реєстрація</h2>
+    <input id="login" placeholder="Логін" autocomplete="username">
+    <input id="password" type="password" placeholder="Пароль">
+    <button onclick="authenticate('login')">Увійти</button>
+    <button onclick="authenticate('register')">Реєстрація</button>
+</section>
 
-    <form id="form">
+<section id="mainPanel" hidden>
+    <div class="panel">
+        <h2 id="username"></h2>
+        <button onclick="logout()">Вийти</button>
+        <p id="statistics"></p>
+    </div>
+
+    <form id="matchForm" class="panel">
+        <h2>Додати матч</h2>
         <input id="date" type="date" required>
-
-        <input id="kills" type="number"
-               min="0" placeholder="Кількість вбивств" required>
-
-        <input id="duration" type="number"
-               min="0.1" step="0.1"
-               placeholder="Тривалість матчу (хв)" required>
-<select id="result">
-    <option value="win">Перемога</option>
-    <option value="loss">Поразка</option>
-</select>
-       
-        <input id="note" placeholder="Коментар">
-
-        <button type="submit">ДОДАТИ МАТЧ</button>
+        <input id="kills" type="number" min="0" placeholder="Kills" required>
+        <input id="duration" type="number" min="0.1" step="0.1"
+               placeholder="Хвилини" required>
+        <select id="result">
+            <option value="win">WIN</option>
+            <option value="loss">LOSS</option>
+        </select>
+        <input id="note" placeholder="Примітка">
+        <button type="submit">Додати</button>
     </form>
 
-    <p id="status"></p>
+    <div class="panel table-wrap">
+        <h2>Мої матчі</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Kills</th>
+                    <th>Хвилини</th>
+                    <th>Результат</th>
+                    <th>Примітка</th>
+                    <th>Дія</th>
+                </tr>
+            </thead>
+            <tbody id="matches"></tbody>
+        </table>
+    </div>
+</section>
 
-    <h2>Історія матчів</h2>
+<script>
+const API = "https://api.pubgmatchtracker.pp.ua";
+const el = id => document.getElementById(id);
 
-    <table>
-        <thead>
-            <tr>
-                <th>Дата</th>
-                <th>Вбивства</th>
-                <th>Хвилини</th>
-                <th>Результат</th>
-                <th>Коментар</th>
-            </tr>
-        </thead>
-        <tbody id="matches"></tbody>
-    </table>
+async function api(path, method = "GET", data) {
+    const options = {
+        method,
+        credentials: "include"
+    };
 
-    <script>
-        const API = "https://api.pubgmatchtracker.pp.ua";
-        const status = document.getElementById("status");
+    if (data !== undefined) {
+        options.headers = {"Content-Type": "application/json"};
+        options.body = JSON.stringify(data);
+    }
 
-        async function loadMatches() {
-            try {
-                const response = await fetch(API + "/matches");
+    const response = await fetch(API + path, options);
+    const body = await response.json().catch(() => ({}));
 
-                if (!response.ok) {
-                    throw new Error("Помилка API");
-                }
+    if (!response.ok) {
+        throw new Error(body.error || "HTTP " + response.status);
+    }
 
-                const matches = await response.json();
-                const table = document.getElementById("matches");
+    return body;
+}
 
-                table.innerHTML = "";
+function status(message) {
+    el("status").textContent = message;
+}
 
-                for (const match of matches) {
-                    const row = document.createElement("tr");
+async function authenticate(action) {
+    try {
+        await api("/" + action, "POST", {
+            login: el("login").value,
+            password: el("password").value
+        });
+        el("password").value = "";
+        await showAccount();
+        status("Вхід успішний");
+    } catch (error) {
+        status(error.message);
+    }
+}
 
-                    const values = [
-                        match.date,
-                        match.kills,
-                        match.duration,
-                        match.result,
-                        match.note || ""
-                    ];
+async function showAccount() {
+    const user = await api("/me");
+    el("authPanel").hidden = true;
+    el("mainPanel").hidden = false;
+    el("username").textContent = "Гравець: " + user.login;
+    await loadMatches();
+}
 
-                    for (const value of values) {
-                        const cell = document.createElement("td");
-                        cell.textContent = value;
-                        row.appendChild(cell);
-                    }
+async function logout() {
+    try {
+        await api("/logout", "POST");
+        el("mainPanel").hidden = true;
+        el("authPanel").hidden = false;
+        el("matches").replaceChildren();
+        el("statistics").textContent = "";
+        status("Ви вийшли");
+    } catch (error) {
+        status(error.message);
+    }
+}
 
-                    table.appendChild(row);
-                }
+async function loadMatches() {
+    const records = await api("/matches");
+    el("matches").replaceChildren();
 
-                status.textContent = "Дані завантажено";
-            } catch (error) {
-                status.textContent = "Сервер поки недоступний";
-            }
+    for (const match of records) {
+        const row = document.createElement("tr");
+
+        for (const key of ["date", "kills", "duration", "result", "note"]) {
+            const cell = document.createElement("td");
+            cell.textContent = match[key] ?? "";
+            row.appendChild(cell);
         }
 
-        document.getElementById("form").addEventListener(
-            "submit", async function(event) {
-                event.preventDefault();
-
-                const match = {
-                    date: document.getElementById("date").value,
-                    kills: Number(document.getElementById("kills").value),
-                    duration: Number(document.getElementById("duration").value),
-                    result: document.getElementById("result").value,
-                    note: document.getElementById("note").value
-                };
-
-                try {
-                    const response = await fetch(API + "/matches", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify(match)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error("Помилка додавання");
-                    }
-
-                    event.target.reset();
-                    await loadMatches();
-
-                } catch (error) {
-                    status.textContent = "Не вдалося додати матч";
-                }
+        const cell = document.createElement("td");
+        const button = document.createElement("button");
+        button.textContent = "Видалити";
+        button.onclick = async () => {
+            try {
+                await api("/matches/" + match.id, "DELETE");
+                await loadMatches();
+            } catch (error) {
+                status(error.message);
             }
-        );
+        };
 
-        loadMatches();
-    </script>
+        cell.appendChild(button);
+        row.appendChild(cell);
+        el("matches").appendChild(row);
+    }
 
+    const report = await api("/report");
+    const s = report.statistics;
+
+    el("statistics").textContent =
+        "Матчі: " + s.matches +
+        " | Перемоги: " + s.wins +
+        " | Kills: " + s.total_kills +
+        " | Win rate: " + s.win_rate + "%";
+}
+
+el("matchForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    try {
+        await api("/matches", "POST", {
+            date: el("date").value,
+            kills: Number(el("kills").value),
+            duration: Number(el("duration").value),
+            result: el("result").value,
+            note: el("note").value
+        });
+
+        await loadMatches();
+        status("Матч додано");
+    } catch (error) {
+        status(error.message);
+    }
+});
+
+showAccount().catch(() => {
+    status("Увійдіть або зареєструйтесь");
+});
+</script>
 </body>
 </html>
-
