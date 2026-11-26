@@ -39,11 +39,11 @@ jobs:
       - name: Check database persistence
         run: |
           test -s data/matches.db
-          python3 -c "import sqlite3; c=sqlite3.connect('data/matches.db'); c.execute('CREATE TABLE IF NOT EXISTS persistence_check (value TEXT)'); c.execute('INSERT INTO persistence_check VALUES (?)', ('saved',)); c.commit(); c.close()"
+          docker compose exec -T api python -c "import sqlite3; c=sqlite3.connect('/data/matches.db'); c.execute('CREATE TABLE IF NOT EXISTS persistence_check (value TEXT)'); c.execute('INSERT INTO persistence_check VALUES (?)', ('saved',)); c.commit(); c.close()"
           docker compose down
           docker compose up -d
           curl --retry 20 --retry-delay 2 --retry-all-errors -fsS http://127.0.0.1:8000/health
-          python3 -c "import sqlite3; c=sqlite3.connect('data/matches.db'); assert c.execute('SELECT value FROM persistence_check').fetchone()[0] == 'saved'; assert c.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'; print('Database persistence: OK')"
+          docker compose exec -T api python -c "import sqlite3; c=sqlite3.connect('/data/matches.db'); assert c.execute('SELECT value FROM persistence_check').fetchone()[0] == 'saved'; assert c.execute('PRAGMA integrity_check').fetchone()[0] == 'ok'; print('Database persistence: OK')"
 
       - name: Container logs
         if: always()
@@ -52,4 +52,5 @@ jobs:
       - name: Cleanup
         if: always()
         run: docker compose down
+
 
