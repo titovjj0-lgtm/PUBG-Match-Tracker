@@ -1,0 +1,12 @@
+tunnel: 6dcc560e-cf2c-4943-a119-99649c414fd9
+credentials-file: 'C:\Users\Asus\.cloudflared\6dcc560e-cf2c-4943-a119-99649c414fd9.json'
+
+ingress:
+  - hostname: api.pubgmatchtracker.pp.ua
+    path: ^/admin(/|$)
+    service: http_status:404
+
+  - hostname: api.pubgmatchtracker.pp.ua
+    service: http://127.0.0.1:8000
+
+  - service: http_status:404
