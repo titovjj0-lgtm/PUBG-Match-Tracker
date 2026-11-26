@@ -6,7 +6,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, origins=[
     "https://pubgmatchtracker.pp.ua",
-    "https://pubg-match-tracker.netlify.app"
+    "https://pubg-match-tracker.netlify.app",
+    "http://localhost:8080"
 ])
 storage.init()
 
