@@ -9,3 +9,4 @@ backups/
 !requirements.txt
 backups/
 .env
+data/

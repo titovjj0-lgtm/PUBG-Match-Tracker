@@ -1,0 +1,15 @@
+venv/
+.venv/
+.git/
+.env
+.env.*
+*.db
+*.db-*
+*.sqlite
+backups/
+data/
+__pycache__/
+.pytest_cache/
+frontend/
+.cloudflared/
+cert.pem
