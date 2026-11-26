@@ -1,45 +1,39 @@
-from datetime import date
+﻿from datetime import date
+from math import isfinite
+from models import Match
 
 
 def add_record(records, match_date, result, kills, duration, note):
     date.fromisoformat(match_date)
-
     kills = int(kills)
     duration = float(duration)
     result = result.lower().strip()
 
     if kills < 0:
-        raise ValueError("Кількість вбивств не може бути від'ємною")
+        raise ValueError("Invalid kills")
 
-    if duration <= 0:
-        raise ValueError("Тривалість має бути більше нуля")
+    if not isfinite(duration) or duration <= 0:
+        raise ValueError("Invalid duration")
 
     if result not in ("win", "loss"):
-        raise ValueError("Введіть win або loss")
+        raise ValueError("Expected win or loss")
 
-    record = {
-        "date": match_date,
-        "result": result,
-        "kills": kills,
-        "duration": duration,
-        "note": note
-    }
-
+    record = Match(match_date, kills, duration, result, note)
     records.append(record)
     return record
 
 
 def find_records(records, result):
     return [
-        record for record in records
-        if record["result"] == result.lower().strip()
+        r for r in records
+        if r.result == result.lower().strip()
     ]
 
 
 def report(records):
     total = len(records)
-    wins = sum(1 for r in records if r["result"] == "win")
-    kills = sum(r["kills"] for r in records)
+    wins = sum(1 for r in records if r.is_win())
+    kills = sum(r.kills for r in records)
 
     return {
         "matches": total,

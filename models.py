@@ -1,10 +1,10 @@
-class Match:
+﻿class Match:
     def __init__(self, date, kills, duration, result,
                  note="", match_id=None):
         self.id = match_id
         self.date = date
         self.kills = int(kills)
-        self.duration = int(duration)
+        self.duration = float(duration)
         self.result = result
         self.note = note
 
