@@ -7,3 +7,5 @@ __pycache__/
 backups/
 *.txt
 !requirements.txt
+backups/
+.env

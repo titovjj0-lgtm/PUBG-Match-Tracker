@@ -1,4 +1,9 @@
-from flask import Flask, request, jsonify
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")
+from flask import Flask, request, jsonify, abort
 import storage
 import logic
 from flask_cors import CORS
@@ -10,6 +15,14 @@ CORS(app, origins=[
     "http://localhost:8080"
 ])
 storage.init()
+
+
+def require_admin():
+    if "CF-Connecting-IP" in request.headers:
+        abort(404)
+
+    if not ADMIN_TOKEN or request.headers.get("X-Admin-Token") != ADMIN_TOKEN:
+        abort(403)
 
 
 @app.get("/matches")
@@ -45,19 +58,20 @@ def create_match():
     except (ValueError, KeyError, TypeError) as error:
         return jsonify({"error": str(error)}), 400
 
-
-@app.delete("/matches/<int:match_id>")
+@app.delete("/admin/matches/<int:match_id>")
 def delete_match(match_id):
+    require_admin()
     if storage.delete_match(match_id):
         return jsonify({"deleted": match_id})
 
     return jsonify({"error": "Match not found"}), 404
 
 
-@app.get("/report")
-def match_report():
-    return jsonify(logic.report(storage.load_records()))
 
 
+@app.get("/admin/export")
+def export_matches():
+    require_admin()
+    return jsonify(storage.load_records())
 if __name__ == "__main__":
     app.run(debug=True)
